@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>銀魂・いつどこでだれがどうした｜絵チャ用</title>
+<style>
+:root{--bg:#fffdf7;--fg:#242424;--card:#fff;--muted:#f3f4f6;--line:#e5e7eb;--blue:#60a5fa;--green:#34d399;--orange:#f59e0b;--purple:#a78bfa;--accent:#0ea5e9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif}
+.wrap{min-height:100svh;padding:14px;display:flex;justify-content:center}
+.app{width:min(980px,100%);display:flex;flex-direction:column;gap:12px}
+header,.panel,.result{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 6px 24px #0000000d}
+header{padding:18px 20px}
+h1{margin:0;font-size:clamp(22px,5vw,34px)}
+.sub{color:#6b7280;margin-top:4px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:999px;padding:11px 16px;font-weight:800;font-size:15px;cursor:pointer;background:#fff;border:2px solid var(--line)}
+button.primary{background:var(--accent);color:#fff;border-color:transparent}
+button:active{transform:translateY(1px)}
+.seed{font-family:ui-monospace,monospace;font-size:12px;color:#6b7280;word-break:break-all}
+.result{padding:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{border-radius:18px;padding:18px;min-height:145px;display:flex;flex-direction:column;justify-content:space-between}
+.card .label{font-weight:900;font-size:15px;opacity:.8}
+.card .text{font-size:clamp(20px,4vw,31px);font-weight:900;line-height:1.35;margin-top:10px}
+.itsu{background:#eff6ff}.doko{background:#ecfdf5}.dare{background:#fffbeb}.do{background:#f5f3ff}
+.sentence{margin:14px 2px 4px;text-align:center;font-size:clamp(19px,4vw,28px);font-weight:900;line-height:1.5}
+.hint{background:var(--muted);padding:12px 14px;border-radius:14px;color:#4b5563;font-size:14px}
+.details{display:none}
+.details.open{display:block}
+textarea{width:100%;min-height:110px;border:2px solid var(--line);border-radius:14px;padding:10px;font:inherit}
+fieldset{border:0;padding:0;margin:0}
+legend{font-weight:900;margin-bottom:6px}
+.small{font-size:13px;color:#6b7280}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.card{min-height:110px}.wrap{padding:8px}}
+</style>
+</head>
+<body>
+<div class="wrap"><main class="app">
+<header>
+  <h1>銀魂・いつどこでだれがどうした</h1>
+  <div class="sub">二人で絵チャするとき用。URLを共有すれば、同じお題が出ます。</div>
+  <div class="toolbar">
+    <button class="primary" id="newBtn">🎲 新しいお題</button>
+    <button id="shareBtn">🔗 お題URLをコピー</button>
+    <button id="toggleEdit">✏️ 語彙を編集</button>
+  </div>
+  <div class="seed" id="seedInfo"></div>
+</header>
+
+<section class="result">
+  <div class="grid">
+    <article class="card itsu"><div class="label">⏰ いつ</div><div class="text" id="itsu">—</div></article>
+    <article class="card doko"><div class="label">📍 どこで</div><div class="text" id="doko">—</div></article>
+    <article class="card dare"><div class="label">🧑 だれが</div><div class="text" id="dare">—</div></article>
+    <article class="card do"><div class="label">✨ どうした</div><div class="text" id="do">—</div></article>
+  </div>
+  <div class="sentence" id="sentence"></div>
+  <div class="hint">💡 絵チャでは「新しいお題」→「お題URLをコピー」→相手に貼る、だけ。相手がURLを開けば同じ結果です。</div>
+</section>
+
+<section class="panel details" id="editor">
+  <div class="small">各欄は「1行＝1候補」。保存すると、このブラウザにだけ保存されます。URLには語彙そのものは入りません。</div>
+  <form id="form">
+    <p><legend>⏰ いつ</legend><textarea id="eItsu"></textarea></p>
+    <p><legend>📍 どこで</legend><textarea id="eDoko"></textarea></p>
+    <p><legend>🧑 だれが</legend><textarea id="eDare"></textarea></p>
+    <p><legend>✨ どうした</legend><textarea id="eDo"></textarea></p>
+    <button class="primary" type="submit">この語彙で保存</button>
+    <button type="button" id="resetWords">初期語彙に戻す</button>
+  </form>
+</section>
+</main></div>
+
+<script>
+const DEFAULTS = {
+itsu:[
+"江戸のある朝","万事屋が休みの日","真夜中","二日酔いの翌朝","雨が降る夜",
+"祭りのあと","仕事が終わった直後","誰も寝静まったころ","決戦の前日","いつもの昼下がり",
+"雪が降る日","季節外れの暑い日","銀時が寝坊した朝","給料日前","何も起きないはずの日"
+],
+doko:[
+"万事屋の居間","真選組屯所","歌舞伎町の路地裏","吉原","江戸城の廊下",
+"病院の待合室","屋根の上","河原","ラーメン屋","定春の小屋の前",
+"万事屋の台所","真選組の道場","祭りの屋台","誰もいない公園","銀時の布団の中"
+],
+dare:[
+"坂田銀時","志村新八","神楽","土方十四郎","沖田総悟","山崎退",
+"近藤勲","桂小太郎","高杉晋助","神威","月詠","志村妙","坂本辰馬","エリザベス","定春"
+],
+do:[
+"突然倒れた","熱を隠していた","何食わぬ顔で寝込んでいた","誰かに看病された","無理をして仕事を続けた",
+"プリンを奪い合った","秘密をばらされた","盛大に勘違いした","寝落ちした","誰かをおんぶした",
+"薬を飲むのを嫌がった","見つかってしまった","ひたすら強がった","珍しく素直になった","何もないところで転んだ",
+"こっそり泣いていた","二日酔いで動けなくなった","勝手に布団へ潜り込んだ","「大丈夫」と言い張った","その場を誤魔化した"
+]};
+
+let words = JSON.parse(localStorage.getItem("gintama-itudoko-words") || "null") || DEFAULTS;
+
+function seedFromUrl(){
+  const m=location.hash.match(/(?:^#|&)s=([^&]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function makeSeed(){
+  return Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10);
+}
+// xorshift-ish deterministic PRNG from string
+function rngFrom(seed){
+  let h=2166136261;
+  for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619)}
+  return function(){
+    h+=0x6D2B79F5;
+    let t=h;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);
+    return ((t^(t>>>14))>>>0)/4294967296;
+  }
+}
+function pick(arr,r){return arr[Math.floor(r()*arr.length)]}
+function generate(seed){
+  const r=rngFrom(seed);
+  return {itsu:pick(words.itsu,r),doko:pick(words.doko,r),dare:pick(words.dare,r),do:pick(words.do,r)};
+}
+function setHash(seed){history.replaceState(null,"","#s="+encodeURIComponent(seed))}
+function render(){
+  const seed=seedFromUrl();
+  if(!seed){document.getElementById("seedInfo").textContent="まだお題はありません。「新しいお題」を押してスタート。";return}
+  const x=generate(seed);
+  for(const k of ["itsu","doko","dare","do"])document.getElementById(k).textContent=x[k];
+  document.getElementById("sentence").textContent=`「${x.itsu}」、${x.doko}で、${x.dare}が、${x.do}。`;
+  document.getElementById("seedInfo").textContent="お題ID："+seed;
+}
+document.getElementById("newBtn").onclick=()=>{const s=makeSeed();setHash(s);render()}
+document.getElementById("shareBtn").onclick=async()=>{
+  if(!seedFromUrl()){alert("先に「新しいお題」を押してください。");return}
+  const url=location.href;
+  try{await navigator.clipboard.writeText(url);alert("共有URLをコピーしました！");}
+  catch(e){prompt("このURLをコピーして相手に送ってください",url)}
+}
+document.getElementById("toggleEdit").onclick=()=>{
+  const ed=document.getElementById("editor");ed.classList.toggle("open");
+  if(ed.classList.contains("open")){
+    eItsu.value=words.itsu.join("\\n");eDoko.value=words.doko.join("\\n");
+    eDare.value=words.dare.join("\\n");eDo.value=words.do.join("\\n");
+  }
+}
+document.getElementById("form").onsubmit=(ev)=>{
+  ev.preventDefault();
+  words={itsu:eItsu.value.split("\\n").map(x=>x.trim()).filter(Boolean),
+         doko:eDoko.value.split("\\n").map(x=>x.trim()).filter(Boolean),
+         dare:eDare.value.split("\\n").map(x=>x.trim()).filter(Boolean),
+         do:eDo.value.split("\\n").map(x=>x.trim()).filter(Boolean)};
+  if(Object.values(words).some(a=>!a.length)){alert("各欄に1つ以上の候補を入れてください。");return}
+  localStorage.setItem("gintama-itudoko-words",JSON.stringify(words));
+  alert("語彙を保存しました。");
+  render();
+}
+document.getElementById("resetWords").onclick=()=>{
+  words=JSON.parse(JSON.stringify(DEFAULTS));
+  localStorage.setItem("gintama-itudoko-words",JSON.stringify(words));
+  eItsu.value=words.itsu.join("\\n");eDoko.value=words.doko.join("\\n");eDare.value=words.dare.join("\\n");eDo.value=words.do.join("\\n");
+  render();
+}
+window.addEventListener("hashchange",render);
+render();
+</script>
+</body>
+</html>
